@@ -4,7 +4,7 @@ from flask import Flask
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 # --- Настройки бота ---
-TOKEN = os.environ.get("8878033329:AAGQK7VuAqkv4YQt2J046NkpIbZWYrunkfg") # Токен из переменных окружения
+TOKEN = "8878033329:AAGQK7VuAqkv4YQt2J046NkpIbZWYrunkfg" # Токен из переменных окружения
 TUBES_PER_PALLET = 1560
 
 # --- Логика бота (ваша функция) ---
