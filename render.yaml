@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: telegram-pallet-bot
+    name: telegram-pallet-bot-1
     runtime: python
     repo: https://github.com/mihnuchka5-cloud/telegram-pallet-bot
     plan: free
