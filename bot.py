@@ -1,36 +1,37 @@
-import os
-import threading
-from flask import Flask
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
+import telebot
+from datetime import datetime
 
-# --- Настройки бота ---
-TOKEN = "8878033329:AAGQK7VuAqkv4YQt2J046NkpIbZWYrunkfg" # Токен из переменных окружения
+TOKEN = "8414397384:AAHashCghQ0tc0XKZFrggZ8cGgdQ6VuPihY"
+bot = telebot.TeleBot(TOKEN)
+
 TUBES_PER_PALLET = 1560
 
-# --- Логика бота (ваша функция) ---
-async def start(update, context):
-    await update.message.reply_text("Бот работает! Отправьте скорость (туб/мин)")
+@bot.message_handler(commands=['start'])
+def start(message):
+    bot.send_message(message.chat.id, 
+        "Пришли скорость в тубах/мин, например: 19")
 
-# --- Код, который запускает бота ---
-def run_bot():
-    app = Application.builder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    # Здесь добавьте ваш обработчик сообщений
-    print("Бот запущен")
-    app.run_polling()
+@bot.message_handler(func=lambda m: True)
+def calc(message):
+    try:
+        speed = float(message.text)
+        now = datetime.now()
+        stop = now.replace(hour=19, minute=0, second=0, microsecond=0)
+        
+        if now >= stop:
+            bot.reply_to(message, "⚠️ Уже 19:00, станок остановлен")
+            return
+        
+        minutes_left = (stop - now).total_seconds() / 60
+        tubes_total = int(speed * minutes_left)
+        pallets = tubes_total // TUBES_PER_PALLET
+        remaining = tubes_total % TUBES_PER_PALLET
+        
+        reply = f"📦 {pallets} поддонов\n"
+        reply += f"🔧 Остаток туб: {remaining}\n"
+        reply += f"⏱ Осталось {round(minutes_left)} мин до 19:00"
+        bot.reply_to(message, reply)
+    except:
+        bot.reply_to(message, "❌ Пришли число, например: 19")
 
-# --- Веб-сервер Flask, чтобы Render не убивал процесс ---
-flask_app = Flask(__name__)
-@flask_app.route('/')
-@flask_app.route('/health')
-def health():
-    return "OK"
-
-if __name__ == "__main__":
-    # Запускаем бота в отдельном потоке
-    bot_thread = threading.Thread(target=run_bot)
-    bot_thread.start()
-    
-    # Запускаем Flask-сервер на порту, который требует Render
-    port = int(os.environ.get("PORT", 5000))
-    flask_app.run(host="0.0.0.0", port=port)
+bot.infinity_polling()
